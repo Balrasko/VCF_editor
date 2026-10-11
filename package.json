@@ -1,0 +1,9 @@
+{
+  "name": "vcf-editor-predvolieb",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test",
+    "build": "node scripts/build.mjs"
+  }
+}
