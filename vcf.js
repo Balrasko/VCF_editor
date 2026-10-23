@@ -38,7 +38,7 @@ function decodeVCardText(value) {
     .trim();
 }
 
-function nameFromCard(lines, cardIndex) {
+function nameFromCard(lines) {
   const findValue = (wanted) => {
     const line = lines.find((item) => {
       const parts = propertyParts(item.text);
@@ -52,7 +52,7 @@ function nameFromCard(lines, cardIndex) {
 
   const structured = findValue("N").split(";").map(decodeVCardText);
   const fallback = [structured[1], structured[0]].filter(Boolean).join(" ");
-  return fallback || `Kontakt ${cardIndex + 1}`;
+  return fallback;
 }
 
 function phoneDisplayValue(value) {
@@ -78,7 +78,7 @@ export class VcfDocument {
       if (current) current.lines.push(line);
 
       if (/^END:VCARD\s*$/i.test(line.text) && current) {
-        current.name = nameFromCard(current.lines, current.index);
+        current.name = nameFromCard(current.lines);
         current.lines.forEach((candidate) => {
           const parts = propertyParts(candidate.text);
           if (!parts || propertyName(parts.key) !== "TEL") return;

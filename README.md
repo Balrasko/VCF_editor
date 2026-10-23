@@ -1,6 +1,6 @@
 # VCF Prefix Editor
 
-A web application with a Slovak interface for loading VCF contacts, editing phone numbers, and changing phone prefixes in bulk. Available for personal and commercial use under the [MIT License](LICENSE).
+A web application in English, Slovak, German, and French for loading VCF contacts, editing phone numbers, and changing phone prefixes in bulk. Available for personal and commercial use under the [MIT License](LICENSE).
 
 The application runs entirely in the browser. VCF files and contact data are never uploaded to a server.
 
@@ -15,6 +15,15 @@ The application runs entirely in the browser. VCF files and contact data are nev
 - Export edited contacts to a new VCF file
 - Local processing with no registration or database
 - Responsive interface for desktop and mobile devices
+- Browser language detection and a language switcher that remembers your choice
+
+## Languages
+
+Use the language selector in the header to choose **English**, **Slovenčina**, **Deutsch**, or **Français**. On the first visit, the application uses the first supported language in your browser preferences, falling back to English. Your manual choice is saved locally for future visits. Language switching also works when browser storage is disabled.
+
+Switching languages updates interface text, messages, accessibility labels, contact counts, and download filenames without losing contact edits or search and prefix inputs. Contact names and VCF properties are preserved.
+
+Translations live in `i18n.js` and use the browser's `Intl.PluralRules` for language-specific plurals. To add a language, add its dictionary and an option to `#language-select` in `index.html`.
 
 ## Requirements
 
@@ -60,7 +69,7 @@ npm run preview
 
 ## Tests
 
-Run the automated tests for the VCF parser and phone-number editing logic:
+Run the automated tests for the VCF parser, phone-number editing logic, and localization:
 
 ```bash
 npm test
@@ -73,17 +82,18 @@ The tests cover:
 - Preserving the `tel:` URI format
 - Preserving unmodified VCF properties
 - Restoring the original number and line folding
+- Language preference matching, translation coverage, interpolation, and plural forms
 
 ## Usage
 
 1. Open the application.
 2. Select a `.vcf` file or drag it into the upload area.
 3. Enter the old and new phone prefixes.
-4. Click **Nahradiť predvoľbu** (Replace prefix).
+4. Click **Replace prefix** (the label follows your selected language).
 5. Edit individual phone numbers manually if needed.
-6. Click **Stiahnuť upravený VCF** (Download edited VCF).
+6. Click **Download edited VCF**.
 
-The original file remains unchanged. The application creates a new file with the `-upravene.vcf` suffix.
+The original file remains unchanged. The application creates a new file with a suffix based on the selected language: `-edited.vcf` (English), `-upravene.vcf` (Slovak), `-bearbeitet.vcf` (German), or `-modifie.vcf` (French).
 
 ## How Prefix Replacement Works
 
@@ -107,6 +117,7 @@ To update numbers beginning with `00420`, perform a separate replacement for tha
 - Contacts are not uploaded to any server.
 - The application does not use analytics, cookies, or external APIs.
 - Loaded data is discarded when the page is closed or refreshed.
+- Only your language preference is saved in local storage; contact data is not stored there.
 
 When working with sensitive contacts, keep a backup of the original VCF file before importing the edited version.
 
@@ -117,12 +128,14 @@ When working with sensitive contacts, keep a backup of the original VCF file bef
 ├── index.html          # User interface
 ├── styles.css          # Styling and responsive design
 ├── app.js              # Application and user-interface logic
+├── i18n.js             # Translations, language matching, and plural formatting
 ├── vcf.js              # VCF parsing, editing, and exporting
 ├── scripts/
 │   ├── build.mjs       # Creates the production dist directory
 │   └── serve.mjs       # Local static server
 ├── test/
-│   └── vcf.test.mjs    # Automated tests
+│   ├── i18n.test.mjs   # Localization tests
+│   └── vcf.test.mjs    # Parser and editing tests
 ├── dist/               # Generated production build, ignored by Git
 ├── .gitignore          # Excludes generated and local files
 ├── LICENSE             # MIT license and copyright notice

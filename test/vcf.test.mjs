@@ -54,3 +54,12 @@ test("restores the exact original TEL folding after reset", () => {
   document.resetPhone(document.phones[0]);
   assert.equal(document.serialize(), source);
 });
+
+test("unnamed contacts can receive localized display names without altering VCF data", () => {
+  const source = "BEGIN:VCARD\r\nVERSION:3.0\r\nTEL:+421900111222\r\nEND:VCARD";
+  const document = new VcfDocument(source);
+  assert.equal(document.cards[0].name, "");
+  assert.equal(document.cards[0].index, 0);
+  document.setPhone(document.phones[0], "+420900111222");
+  assert.equal(document.serialize(), source.replace("+421", "+420"));
+});

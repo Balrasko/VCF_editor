@@ -1,9 +1,20 @@
 import { VcfDocument, readVcfFile } from "./vcf.js";
+import { createI18n, resolveLocale } from "./i18n.js";
 
 const MAX_FILE_SIZE = 20 * 1024 * 1024;
 const avatarColors = ["#e8e1f1", "#e2ece8", "#f1e7dc", "#e4e8f2", "#efe1e4"];
+const LANGUAGE_STORAGE_KEY = "vcf-editor-language";
+let savedLanguage;
+try {
+  savedLanguage = localStorage.getItem(LANGUAGE_STORAGE_KEY);
+} catch {
+  // Language detection still works when browser storage is unavailable.
+}
+const i18n = createI18n(resolveLocale([savedLanguage, ...(navigator.languages || [navigator.language])]));
+const t = (key, values) => i18n.t(key, values);
 
 const elements = {
+  languageSelect: document.querySelector("#language-select"),
   uploadView: document.querySelector("#upload-view"),
   editorView: document.querySelector("#editor-view"),
   fileInput: document.querySelector("#file-input"),
@@ -25,15 +36,54 @@ const elements = {
 };
 
 let documentModel = null;
-let currentFileName = "kontakty.vcf";
+let currentFileName = "";
 let toastTimer = null;
+let toastMessage = null;
+let prefixFeedback = null;
 
-function showToast(message, isError = false) {
+function applyLanguage() {
+  document.documentElement.lang = i18n.locale;
+  elements.languageSelect.value = i18n.locale;
+  document.querySelectorAll("[data-i18n]").forEach((element) => {
+    element.textContent = t(element.dataset.i18n);
+  });
+  for (const attribute of ["aria-label", "placeholder", "content"]) {
+    document.querySelectorAll(`[data-i18n-${attribute}]`).forEach((element) => {
+      element.setAttribute(attribute, t(element.getAttribute(`data-i18n-${attribute}`)));
+    });
+  }
+  if (documentModel) {
+    updateFileSummary();
+    renderContacts(elements.searchInput.value);
+    updateChangedState();
+  }
+  if (prefixFeedback) elements.replaceFeedback.textContent = t(prefixFeedback.key, prefixFeedback.values);
+  if (toastMessage) elements.toast.textContent = t(toastMessage.key, toastMessage.values);
+}
+
+function updateFileSummary() {
+  elements.fileSummary.textContent = `${t("contactCount", { count: documentModel.cards.length })} · ${t("phoneCount", { count: documentModel.phones.length })}`;
+}
+
+function contactName(card) {
+  return card.name || t("unnamedContact", { number: card.index + 1 });
+}
+
+function setPrefixFeedback(key, values = {}) {
+  prefixFeedback = { key, values };
+  elements.replaceFeedback.textContent = t(key, values);
+}
+
+function showToast(key, values = {}, isError = false) {
   clearTimeout(toastTimer);
-  elements.toast.textContent = message;
+  toastMessage = { key, values };
+  elements.toast.textContent = t(key, values);
   elements.toast.classList.toggle("is-error", isError);
   elements.toast.classList.add("is-visible");
-  toastTimer = setTimeout(() => elements.toast.classList.remove("is-visible"), 3200);
+  toastTimer = setTimeout(() => {
+    elements.toast.classList.remove("is-visible");
+    toastMessage = null;
+  }, 3200);
 }
 
 function initials(name) {
@@ -47,28 +97,29 @@ function initials(name) {
 
 function phoneType(phone) {
   const typeMatch = phone.key.match(/(?:^|;)TYPE=([^;:]+)/i);
-  if (!typeMatch) return "Telefón";
+  if (!typeMatch) return t("phone");
   const type = typeMatch[1].split(",")[0].toLowerCase();
-  const labels = { cell: "Mobil", mobile: "Mobil", home: "Domov", work: "Práca", fax: "Fax" };
-  return labels[type] || typeMatch[1].split(",")[0];
+  const labels = { cell: "mobile", mobile: "mobile", home: "home", work: "work", fax: "fax" };
+  return Object.hasOwn(labels, type) ? t(labels[type]) : typeMatch[1].split(",")[0];
 }
 
 function createContactRow(card, index) {
+  const displayName = contactName(card);
   const row = document.createElement("article");
   row.className = "contact-row";
-  row.dataset.search = `${card.name} ${card.phones.map((phone) => phone.value).join(" ")}`.toLocaleLowerCase("sk");
+  row.dataset.search = `${displayName} ${card.phones.map((phone) => phone.value).join(" ")}`.toLocaleLowerCase(i18n.locale);
   row.style.setProperty("--avatar", avatarColors[index % avatarColors.length]);
 
   const person = document.createElement("div");
   person.className = "contact-person";
   const avatar = document.createElement("span");
   avatar.className = "avatar";
-  avatar.textContent = initials(card.name);
+  avatar.textContent = initials(displayName);
   const nameBlock = document.createElement("span");
   const name = document.createElement("strong");
-  name.textContent = card.name;
+  name.textContent = displayName;
   const phoneMeta = document.createElement("small");
-  phoneMeta.textContent = card.phones.length === 1 ? phoneType(card.phones[0]) : `${card.phones.length} telefónne čísla`;
+  phoneMeta.textContent = card.phones.length === 1 ? phoneType(card.phones[0]) : t("phoneCount", { count: card.phones.length });
   nameBlock.append(name, phoneMeta);
   person.append(avatar, nameBlock);
 
@@ -80,7 +131,7 @@ function createContactRow(card, index) {
     wrapper.dataset.phoneId = phone.id;
     const hiddenLabel = document.createElement("span");
     hiddenLabel.className = "sr-only";
-    hiddenLabel.textContent = `${phoneType(phone)} pre ${card.name}`;
+    hiddenLabel.textContent = t("phoneLabel", { type: phoneType(phone), name: displayName });
     const input = document.createElement("input");
     input.className = "phone-input";
     input.type = "tel";
@@ -88,7 +139,7 @@ function createContactRow(card, index) {
     input.autocomplete = "off";
     input.addEventListener("input", () => {
       documentModel.setPhone(phone, input.value);
-      row.dataset.search = `${card.name} ${card.phones.map((item) => item.value).join(" ")}`.toLocaleLowerCase("sk");
+      row.dataset.search = `${displayName} ${card.phones.map((item) => item.value).join(" ")}`.toLocaleLowerCase(i18n.locale);
       updateChangedState();
     });
     const dot = document.createElement("span");
@@ -101,8 +152,8 @@ function createContactRow(card, index) {
   const reset = document.createElement("button");
   reset.type = "button";
   reset.className = "reset-phone";
-  reset.textContent = "Vrátiť";
-  reset.title = "Vrátiť pôvodné čísla kontaktu";
+  reset.textContent = t("reset");
+  reset.title = t("resetTitle");
   reset.addEventListener("click", () => {
     card.phones.forEach((phone) => documentModel.resetPhone(phone));
     renderContacts(elements.searchInput.value);
@@ -114,13 +165,13 @@ function createContactRow(card, index) {
 }
 
 function renderContacts(filter = "") {
-  const query = filter.trim().toLocaleLowerCase("sk");
+  const query = filter.trim().toLocaleLowerCase(i18n.locale);
   elements.contactsList.replaceChildren();
   const cards = documentModel.cards.filter((card) => card.phones.length > 0);
   let visible = 0;
 
   cards.forEach((card, index) => {
-    const haystack = `${card.name} ${card.phones.map((phone) => phone.value).join(" ")}`.toLocaleLowerCase("sk");
+    const haystack = `${contactName(card)} ${card.phones.map((phone) => phone.value).join(" ")}`.toLocaleLowerCase(i18n.locale);
     if (query && !haystack.includes(query)) return;
     const row = createContactRow(card, index);
     const cardChanged = card.phones.some((phone) => phone.value !== phone.original);
@@ -139,11 +190,7 @@ function renderContacts(filter = "") {
 
 function updateChangedState() {
   const count = documentModel.changedPhones.length;
-  elements.changeCount.textContent = count === 0
-    ? "Zatiaľ bez zmien"
-    : count === 1
-      ? "Upravené 1 telefónne číslo"
-      : `Upravených ${count} telefónnych čísel`;
+  elements.changeCount.textContent = count === 0 ? t("noChanges") : t("changedCount", { count });
 
   document.querySelectorAll(".contact-row").forEach((row) => {
     const wrappers = [...row.querySelectorAll(".phone-wrap")];
@@ -161,41 +208,53 @@ function updateChangedState() {
 async function loadFile(file) {
   if (!file) return;
   if (!file.name.toLowerCase().endsWith(".vcf")) {
-    showToast("Vyberte súbor s príponou .vcf.", true);
+    showToast("invalidFile", {}, true);
     return;
   }
   if (file.size > MAX_FILE_SIZE) {
-    showToast("Súbor je väčší ako povolených 20 MB.", true);
+    showToast("fileTooLarge", {}, true);
     return;
   }
 
   try {
     const text = await readVcfFile(file);
     const parsed = new VcfDocument(text);
-    if (parsed.cards.length === 0) throw new Error("VCF neobsahuje žiadne karty kontaktov.");
+    if (parsed.cards.length === 0) {
+      showToast("noContacts", {}, true);
+      return;
+    }
 
     documentModel = parsed;
     currentFileName = file.name;
     elements.fileName.textContent = file.name;
-    const contactWord = parsed.cards.length === 1 ? "kontakt" : parsed.cards.length < 5 ? "kontakty" : "kontaktov";
-    const phoneWord = parsed.phones.length === 1 ? "číslo" : parsed.phones.length < 5 ? "čísla" : "čísel";
-    elements.fileSummary.textContent = `${parsed.cards.length} ${contactWord} · ${parsed.phones.length} telefónnych ${phoneWord}`;
+    updateFileSummary();
     elements.oldPrefix.value = "";
     elements.newPrefix.value = "";
     elements.searchInput.value = "";
     elements.replaceFeedback.textContent = "";
+    prefixFeedback = null;
     elements.uploadView.hidden = true;
     elements.editorView.hidden = false;
     renderContacts();
     updateChangedState();
     window.scrollTo({ top: 0, behavior: "smooth" });
-    showToast(`Načítaný súbor ${file.name}`);
-  } catch (error) {
-    showToast(error.message || "VCF súbor sa nepodarilo načítať.", true);
+    showToast("fileLoaded", { name: file.name });
+  } catch {
+    showToast("fileReadError", {}, true);
   } finally {
     elements.fileInput.value = "";
   }
 }
+
+elements.languageSelect.addEventListener("change", () => {
+  i18n.setLocale(elements.languageSelect.value);
+  try {
+    localStorage.setItem(LANGUAGE_STORAGE_KEY, i18n.locale);
+  } catch {
+    // Switching languages does not depend on persistent storage.
+  }
+  applyLanguage();
+});
 
 elements.fileInput.addEventListener("change", (event) => loadFile(event.target.files[0]));
 elements.chooseAnother.addEventListener("click", () => elements.fileInput.click());
@@ -221,16 +280,13 @@ elements.replacePrefix.addEventListener("click", () => {
   const newPrefix = elements.newPrefix.value.trim();
   if (!oldPrefix) {
     elements.oldPrefix.focus();
-    elements.replaceFeedback.textContent = "Zadajte starú predvoľbu.";
+    setPrefixFeedback("enterOldPrefix");
     return;
   }
 
   const count = documentModel.replacePrefix(oldPrefix, newPrefix);
-  elements.replaceFeedback.textContent = count === 0
-    ? `Nenašlo sa žiadne číslo začínajúce na ${oldPrefix}.`
-    : count === 1
-      ? "Predvoľba bola nahradená v 1 čísle."
-      : `Predvoľba bola nahradená v ${count} číslach.`;
+  if (count === 0) setPrefixFeedback("noPrefixMatches", { prefix: oldPrefix });
+  else setPrefixFeedback("prefixReplaced", { count });
   renderContacts(elements.searchInput.value);
   updateChangedState();
 });
@@ -242,15 +298,17 @@ elements.downloadButton.addEventListener("click", () => {
   const blob = new Blob([content], { type: "text/vcard;charset=utf-8" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
-  const baseName = currentFileName.replace(/\.vcf$/i, "") || "kontakty";
+  const baseName = currentFileName.replace(/\.vcf$/i, "") || t("fileBaseName");
   link.href = url;
-  link.download = `${baseName}-upravene.vcf`;
+  link.download = `${baseName}-${t("fileSuffix")}.vcf`;
   document.body.append(link);
   link.click();
   link.remove();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
-  showToast("Upravený VCF súbor je pripravený.");
+  showToast("downloadReady");
 });
+
+applyLanguage();
 
 document.addEventListener("keydown", (event) => {
   if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "s" && documentModel) {

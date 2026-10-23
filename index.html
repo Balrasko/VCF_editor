@@ -1,50 +1,61 @@
 <!doctype html>
-<html lang="sk">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Súkromný editor VCF kontaktov na hromadnú zmenu telefónnych predvolieb." />
+    <meta name="description" data-i18n-content="description" content="A private VCF contact editor for updating phone prefixes in bulk." />
     <meta name="theme-color" content="#f4f1ea" />
-    <title>VCF editor predvolieb</title>
+    <title data-i18n="pageTitle">VCF Prefix Editor</title>
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
     <header class="site-header">
-      <a class="brand" href="./" aria-label="VCF editor – domov">
+      <a class="brand" href="./" data-i18n-aria-label="homeLabel" aria-label="VCF editor – home">
         <span class="brand-mark" aria-hidden="true">
           <svg viewBox="0 0 24 24"><path d="M7.8 3.5h6.8l3.6 3.7v13.3H7.8z"/><path d="M14.4 3.8v3.8h3.7M10.5 12h5M10.5 15.5h5"/></svg>
         </span>
-        <span>VCF editor</span>
+        <span data-i18n="brand">VCF editor</span>
       </a>
-      <div class="local-badge"><span></span> Dáta zostávajú v zariadení</div>
+      <div class="header-actions">
+        <div class="local-badge"><i aria-hidden="true"></i><span data-i18n="localBadge">Your data stays on your device</span></div>
+        <label class="language-switcher">
+          <span class="sr-only" data-i18n="language">Language</span>
+          <select id="language-select">
+            <option value="en" lang="en">English</option>
+            <option value="sk" lang="sk">Slovenčina</option>
+            <option value="de" lang="de">Deutsch</option>
+            <option value="fr" lang="fr">Français</option>
+          </select>
+        </label>
+      </div>
     </header>
 
     <main>
       <section class="hero" aria-labelledby="page-title">
-        <p class="eyebrow">JEDNODUCHÝ NÁSTROJ PRE KONTAKTY</p>
-        <h1 id="page-title">Predvoľby<br /><em>pod kontrolou.</em></h1>
-        <p class="hero-copy">Nahrajte VCF súbor, upravte telefónne čísla a stiahnite si hotový zoznam kontaktov. Bez registrácie a bez odosielania dát.</p>
+        <p class="eyebrow" data-i18n="heroEyebrow">A SIMPLE TOOL FOR CONTACTS</p>
+        <h1 id="page-title"><span data-i18n="heroTitle">Phone prefixes</span><br /><em data-i18n="heroEmphasis">under control.</em></h1>
+        <p class="hero-copy" data-i18n="heroCopy">Load a VCF file, edit phone numbers, and download your updated contacts. No registration or data uploads.</p>
       </section>
 
-      <section id="upload-view" class="upload-layout" aria-label="Načítanie VCF súboru">
+      <section id="upload-view" class="upload-layout" data-i18n-aria-label="uploadLabel" aria-label="Load a VCF file">
         <label id="drop-zone" class="drop-zone" for="file-input">
           <input id="file-input" type="file" accept=".vcf,text/vcard,text/x-vcard" />
           <span class="upload-icon" aria-hidden="true">
             <svg viewBox="0 0 24 24"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M5 13.5v5.2c0 .7.6 1.3 1.3 1.3h11.4c.7 0 1.3-.6 1.3-1.3v-5.2"/></svg>
           </span>
-          <strong>Sem presuňte VCF súbor</strong>
-          <span>alebo <u>vyberte súbor zo zariadenia</u></span>
-          <small>Podporované verzie vCard 2.1, 3.0 a 4.0 · max. 20 MB</small>
+          <strong data-i18n="dropTitle">Drop your VCF file here</strong>
+          <span><span data-i18n="dropOr">or</span> <u data-i18n="dropBrowse">choose a file from your device</u></span>
+          <small data-i18n="fileSupport">vCard 2.1, 3.0 and 4.0 supported · max. 20 MB</small>
         </label>
 
-        <div class="steps" aria-label="Ako to funguje">
-          <article><b>01</b><span><strong>Nahrajte</strong><small>Vyberte svoj .vcf súbor</small></span></article>
-          <article><b>02</b><span><strong>Upravte</strong><small>Zmeňte predvoľby naraz</small></span></article>
-          <article><b>03</b><span><strong>Stiahnite</strong><small>Uložte hotový súbor</small></span></article>
+        <div class="steps" data-i18n-aria-label="stepsLabel" aria-label="How it works">
+          <article><b>01</b><span><strong data-i18n="stepUpload">Load</strong><small data-i18n="stepUploadHint">Choose your .vcf file</small></span></article>
+          <article><b>02</b><span><strong data-i18n="stepEdit">Edit</strong><small data-i18n="stepEditHint">Update prefixes in bulk</small></span></article>
+          <article><b>03</b><span><strong data-i18n="stepDownload">Download</strong><small data-i18n="stepDownloadHint">Save your updated file</small></span></article>
         </div>
       </section>
 
-      <section id="editor-view" class="editor-view" hidden aria-label="Editor kontaktov">
+      <section id="editor-view" class="editor-view" hidden data-i18n-aria-label="editorLabel" aria-label="Contact editor">
         <div class="file-bar">
           <div class="file-info">
             <span class="file-icon" aria-hidden="true">
@@ -52,49 +63,49 @@
             </span>
             <span><strong id="file-name"></strong><small id="file-summary"></small></span>
           </div>
-          <button id="choose-another" class="text-button" type="button">Vybrať iný súbor</button>
+          <button id="choose-another" class="text-button" type="button" data-i18n="chooseAnother">Choose another file</button>
         </div>
 
         <div class="bulk-panel">
           <div class="bulk-heading">
             <span class="wand-icon" aria-hidden="true">✦</span>
-            <span><strong>Hromadná zmena predvoľby</strong><small>Zmenia sa iba čísla, ktoré začínajú zadanou hodnotou.</small></span>
+            <span><strong data-i18n="bulkTitle">Replace phone prefixes in bulk</strong><small data-i18n="bulkHint">Only numbers starting with the specified value will change.</small></span>
           </div>
           <div class="bulk-controls">
-            <label>Stará predvoľba<input id="old-prefix" type="text" inputmode="tel" placeholder="napr. +420" autocomplete="off" /></label>
+            <label><span data-i18n="oldPrefix">Old prefix</span><input id="old-prefix" type="text" inputmode="tel" data-i18n-placeholder="oldPrefixPlaceholder" placeholder="e.g. +420" autocomplete="off" /></label>
             <span class="arrow" aria-hidden="true">→</span>
-            <label>Nová predvoľba<input id="new-prefix" type="text" inputmode="tel" placeholder="napr. +421" autocomplete="off" /></label>
-            <button id="replace-prefix" class="primary-button" type="button">Nahradiť predvoľbu</button>
+            <label><span data-i18n="newPrefix">New prefix</span><input id="new-prefix" type="text" inputmode="tel" data-i18n-placeholder="newPrefixPlaceholder" placeholder="e.g. +421" autocomplete="off" /></label>
+            <button id="replace-prefix" class="primary-button" type="button" data-i18n="replacePrefix">Replace prefix</button>
           </div>
           <p id="replace-feedback" class="replace-feedback" aria-live="polite"></p>
         </div>
 
         <div class="contacts-toolbar">
           <div>
-            <p class="eyebrow">KONTAKTY</p>
-            <h2>Telefónne čísla <span id="visible-count"></span></h2>
+            <p class="eyebrow" data-i18n="contacts">CONTACTS</p>
+            <h2><span data-i18n="phoneNumbers">Phone numbers</span> <span id="visible-count"></span></h2>
           </div>
           <label class="search-box">
             <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg>
-            <span class="sr-only">Hľadať kontakt</span>
-            <input id="search-input" type="search" placeholder="Hľadať meno alebo číslo" autocomplete="off" />
+            <span class="sr-only" data-i18n="searchLabel">Search contacts</span>
+            <input id="search-input" type="search" data-i18n-placeholder="searchPlaceholder" placeholder="Search by name or number" autocomplete="off" />
           </label>
         </div>
 
         <div id="contacts-list" class="contacts-list"></div>
-        <p id="empty-search" class="empty-search" hidden>Žiadny kontakt nezodpovedá vyhľadávaniu.</p>
+        <p id="empty-search" class="empty-search" hidden data-i18n="emptySearch">No contacts match your search.</p>
 
         <div class="download-bar">
-          <div><strong id="change-count">Zatiaľ bez zmien</strong><small>Pôvodný súbor zostane nedotknutý.</small></div>
+          <div><strong id="change-count" data-i18n="noChanges">No changes yet</strong><small data-i18n="originalUnchanged">Your original file stays unchanged.</small></div>
           <button id="download-button" class="download-button" type="button">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11m0 0 4-4m-4 4-4-4M5 19.5h14"/></svg>
-            Stiahnuť upravený VCF
+            <span data-i18n="download">Download edited VCF</span>
           </button>
         </div>
       </section>
     </main>
 
-    <footer><span>VCF editor</span><span>Všetko sa spracúva lokálne vo vašom prehliadači.</span></footer>
+    <footer><span data-i18n="brand">VCF editor</span><span data-i18n="footer">Everything is processed locally in your browser.</span></footer>
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
     <script type="module" src="./app.js"></script>
