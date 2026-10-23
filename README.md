@@ -1,6 +1,6 @@
 # VCF Prefix Editor
 
-A simple web application for loading VCF contacts, editing phone numbers, and changing phone prefixes in bulk.
+A web application with a Slovak interface for loading VCF contacts, editing phone numbers, and changing phone prefixes in bulk. Available for personal and commercial use under the [MIT License](LICENSE).
 
 The application runs entirely in the browser. VCF files and contact data are never uploaded to a server.
 
@@ -26,14 +26,7 @@ The project has no external JavaScript dependencies, so running `npm install` is
 
 ## Running Locally
 
-Clone the repository and open its directory:
-
-```bash
-git clone YOUR_REPOSITORY_URL
-cd editor
-```
-
-Start the local development server:
+From the repository directory, start the local development server:
 
 ```bash
 npm run dev
@@ -55,7 +48,9 @@ Create the static production files in the `dist` directory:
 npm run build
 ```
 
-The generated `dist` directory can be deployed to any static hosting provider, such as GitHub Pages, Netlify, Cloudflare Pages, or Vercel.
+Deploy the contents of `dist/` to a static hosting provider. The build includes `LICENSE` so the copyright and permission notice accompany redistributed files. Node.js is only needed for local development and building; the deployed application runs in the browser.
+
+The generated `dist/` directory is ignored by Git. Run `npm run build` after checking out the repository and whenever source files change. For automated deployments, use `npm run build` as the build command and `dist` as the publish directory.
 
 To preview the production build locally, run:
 
@@ -84,9 +79,9 @@ The tests cover:
 1. Open the application.
 2. Select a `.vcf` file or drag it into the upload area.
 3. Enter the old and new phone prefixes.
-4. Click **Replace prefix**.
+4. Click **Nahradiť predvoľbu** (Replace prefix).
 5. Edit individual phone numbers manually if needed.
-6. Click **Download edited VCF**.
+6. Click **Stiahnuť upravený VCF** (Download edited VCF).
 
 The original file remains unchanged. The application creates a new file with the `-upravene.vcf` suffix.
 
@@ -128,7 +123,9 @@ When working with sensitive contacts, keep a backup of the original VCF file bef
 │   └── serve.mjs       # Local static server
 ├── test/
 │   └── vcf.test.mjs    # Automated tests
-├── dist/               # Production build
+├── dist/               # Generated production build, ignored by Git
+├── .gitignore          # Excludes generated and local files
+├── LICENSE             # MIT license and copyright notice
 └── package.json
 ```
 
@@ -147,6 +144,10 @@ When working with sensitive contacts, keep a backup of the original VCF file bef
 - Contact names using older quoted-printable encoding might not always be displayed correctly in the preview.
 - The application edits `TEL` properties and preserves other contact properties without modification.
 
-## License
+## License and Commercial Use
 
-Add a license before publishing the project, depending on how you want to allow others to use it. The MIT License is a common choice for open-source projects.
+Copyright (c) 2026 Filip Hromada. Licensed under the [MIT License](LICENSE).
+
+- Commercial use, modification, distribution, sublicensing, and sale are permitted.
+- Include the copyright and permission notice in all copies or substantial portions of the software. Keep `LICENSE` with redistributed source and production builds.
+- The software is provided "as is", without warranty. See [LICENSE](LICENSE) for the full terms.

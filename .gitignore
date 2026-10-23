@@ -1,5 +1,19 @@
+# Dependencies
 node_modules/
-.DS_Store
-*.log
+
+# Generated output
+/dist/
+/coverage/
+
+# Local environment and logs
 .env
 .env.*
+!.env.example
+*.log
+
+# Operating system and editor temporary files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~

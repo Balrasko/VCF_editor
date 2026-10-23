@@ -1,6 +1,7 @@
 {
   "name": "vcf-editor-predvolieb",
   "private": true,
+  "license": "MIT",
   "type": "module",
   "engines": {
     "node": ">=18"
